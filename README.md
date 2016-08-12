@@ -19,5 +19,6 @@ ports 4535 and 4537. One for the az part of the controller and one for the el.
 
 TO RUN:
 Just run start_rotor.sh with root permissions and engage on Gpredict.
+
 TO STOP:
 CTRL-C. It's not pretty but it works.
