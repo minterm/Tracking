@@ -24,9 +24,12 @@
 trap 'kill $(jobs -p)' EXIT
 
 # spawn az
-sudo rotctld -m 405 -t 4535 -r /dev/ttyUSB4 &
+# sudo???????????????????
+rotctld -m 405 -s 9600 -C min_az=-5,max_az=360,min_el=0,max_el=0 -t 4535 -r /dev/ttyUSB0 &
+
 # spawn el
-sudo rotctld -m 405 -t 4537 -r /dev/ttyUSB3 &
+# sudo???????????????????
+rotctld -m 405 -s 9600 -C min_az=0,max_az=0,min_el=-5,max_el=180 -t 4537 -r /dev/ttyUSB1 &
 
 # python script
 ./rot_split.py

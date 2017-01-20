@@ -51,72 +51,28 @@ class server_socket:
         self.connected, self.address = self.sock.accept()
 
     def acceptNew(self):
+        if self.connected:
+            try:
+                self.connected.close()
+            except Exception e:
+                print e
         self.connected, self.address = self.sock.accept()
     
-    def listen(self):
+    def receive(self):
         return str(self.connected.recv(REC_SZ))
 
     def respond(self, response):
         self.connected.send(response)
 
     def __del__(self):
+        if self.connected:
+            try:
+                self.connected.close()
+            except Exception e:
+                print e
         self.sock.close()
 
 ###############################################################################
-def listen_to_gpredict(gpredict, az, el):
-    print "____Listen to Gpredict____"
-    heard = gpredict.listen()
-    if heard != "":
-        print "Command: " + heard
-    if heard == "":
-        print "Waiting to engage with Gpredict."
-        gpredict.acceptNew()
-        print "Engaged."
-        listen_to_gpredict(gpredict, az, el)
-    elif heard[0] == 'p':
-        get_position(gpredict, az, el, heard)
-    elif heard[0] == 'P':
-        set_position(gpredict, az, el, heard)
-    elif heard[0] == 'q':
-        print "Disengaged."
-        if not RUN_FOREVER:
-            return
-        listen_to_gpredict(gpredict, az, el)
-    else:
-        print "Unknown command: " + str(heard)
-
-def get_position(gpredict, az, el, cmd):
-    print "____Get Position____"
-    az.send(cmd)
-    az_response = az.get_response().splitlines()[0]
-    el.send(cmd)
-    el_response = el.get_response().splitlines()[0]
-    print "AZ: " + az_response
-    print "EL: " + el_response
-    response = az_response + '\n' + el_response + '\n'
-    print "response: " + response
-    gpredict.respond(response)
-    listen_to_gpredict(gpredict, az, el)
-
-def set_position(gpredict, az, el, cmd):
-    print "____Set Position____"
-    cmd  = cmd.split()
-    # cmd = [P, AZIMUTH, ELEVATION]
-    azCtrl = cmd[0] + ' ' + cmd[1] + ' 0\n'
-    az.send(azCtrl)
-    elCtrl = cmd[0] + ' ' + cmd[2] + ' 0\n'
-    el.send(elCtrl)
-    print "Commands sent:"
-    print azCtrl
-    print elCtrl
-    az_resp = az.get_response()
-    el_resp = el.get_response()
-    if az_resp == el_resp and az_resp == "RPRT 0\n":
-        pass
-    else:
-        print "HAMLIB ERROR.\n" + az_resp + el_resp
-    gpredict.respond(az_resp)
-    listen_to_gpredict(gpredict, az, el)
 
 def main():
     try:
@@ -133,8 +89,64 @@ def main():
     print "Waiting to engage with Gpredict."
     gpredict.setup(HOST, GPORT)
     print "Engaged."
-    listen_to_gpredict(gpredict, az, el)
-    print "DONE"
 
+    while True:
+        print "____Listen to Gpredict____"
+        heard = gpredict.receive()
+        if heard == "":
+            print "Waiting to engage with Gpredict."
+            gpredict.acceptNew()
+            print "Engaged."
+            continue
+        else:
+            print "Command: " + heard
+        
+        if heard[0] == 'p':
+            get_position(gpredict, az, el, heard)
+        elif heard[0] == 'P':
+            set_position(gpredict, az, el, heard)
+        elif heard[0] == 'q':
+            print "Disengaged."
+            if not RUN_FOREVER:
+                break
+        else:
+            print "Unknown command: " + str(heard)
+
+def get_position(gpredict, az, el, cmd):
+    print "____Get Position____"
+    az.send(cmd)
+    az_response = az.get_response().splitlines()[0]
+    el.send(cmd)
+    el_response = el.get_response().splitlines()[0]
+    print "AZ: " + az_response
+    print "EL: " + el_response
+    response = az_response + '\n' + el_response + '\n'
+    print "response: " + response
+    gpredict.respond(response)
+
+def set_position(gpredict, az, el, cmd):
+    print "____Set Position____"
+    cmd  = cmd.split()
+    # cmd = [P, AZIMUTH, ELEVATION]
+    azCtrl = cmd[0] + ' ' + cmd[1] + ' 0\n'
+    az.send(azCtrl)
+    elCtrl = cmd[0] + ' ' + cmd[2] + ' 0\n'
+    el.send(elCtrl)
+    print "Commands sent:"
+    print "AZ:\n" + azCtrl
+    print "EL:\n" + elCtrl
+    az_resp = az.get_response()
+    el_resp = el.get_response()
+    print "Responses:"
+    print "AZ: " + az_resp
+    print "EL: " + el_resp
+    if az_resp == el_resp and az_resp == "RPRT 0\n":
+        pass
+    else:
+        print "HAMLIB ERROR.\n" + az_resp + el_resp
+    gpredict.respond(az_resp)
+
+
+###############################################################################
 if __name__ == "__main__":
     main()
