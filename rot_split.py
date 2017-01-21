@@ -68,7 +68,7 @@ class server_socket:
         if self.connected:
             try:
                 self.connected.close()
-            except Exception e:
+            except Exception as e:
                 print e
         self.sock.close()
 
