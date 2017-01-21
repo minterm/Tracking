@@ -46,9 +46,13 @@ class server_socket:
         self.address   = None
     
     def setup(self, host, port, listeners=1):
-        self.sock.bind((host,port))
-        self.sock.listen(listeners)
-        self.connected, self.address = self.sock.accept()
+        try:
+            self.sock.bind((host,port))
+            self.sock.listen(listeners)
+            self.connected, self.address = self.sock.accept()
+        except Exception as e:
+            print "Error setting up server and connection."
+            print e
 
     def acceptNew(self):
         if self.connected:
@@ -56,7 +60,11 @@ class server_socket:
                 self.connected.close()
             except Exception as e:
                 print e
-        self.connected, self.address = self.sock.accept()
+        try:
+            self.connected, self.address = self.sock.accept()
+        except Exception as e:
+            print "Error accepting new connection."
+            print e
     
     def receive(self):
         return str(self.connected.recv(REC_SZ))
@@ -111,6 +119,7 @@ def main():
                 break
         else:
             print "Unknown command: " + str(heard)
+    print "Exiting."
 
 def get_position(gpredict, az, el, cmd):
     print "____Get Position____"
