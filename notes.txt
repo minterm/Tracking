@@ -11,6 +11,8 @@ Hamlib Notes
 
 $ rotctl --list                           # get device ID of the controller
 Rig #  Mfg                    Model                   Version         Status
+  401  Idiom Press            Rotor-EZ                2010-02-14      Beta
+  403  Hy-Gain                DCU-1/DCU-1X            2010-08-23      Untested
   405  Green Heron            RT-21                   2014-09-14      Alpha
 
 $ rotctl --show-conf             # configuration options for the controller
@@ -53,3 +55,12 @@ $ rotctld --model=405 --serial-speed=9600 --rig-file=SERIALPORT --set-conf=min_a
 or
 
 $ rotctld -m 405 -s 9600 -r SERIALPORT -C min_az=-5,max_az=360,min_el=-5,max_el=180 -t TCPPORT
+
+From the Green Heron RT-21 Manual Appendix F - Protocol:
+'The protocol implemented in the RT-21 is a "superset" of DCU-1 and therefore the RT-21 is compatible with most 
+software packages without change. If your software package does not have a Green Heron selection, then try selecting 
+DCU-1 or Rotor EZ. All communications is on the RS-232 port and 4800 8 N1, the DCU-1 standard. (9600 8N1 may be 
+selected using the Advanced tab in SETUP Utility). The USB port can also be used. When USB is plugged in, output 
+from the 232 port is suppressed except for M/S and M/C commands.'
+
+This suggests the script should use the "-s 4800" option and should work with the "-m 401" option
