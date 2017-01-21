@@ -50,6 +50,8 @@ class server_socket:
             self.sock.bind((host,port))
             self.sock.listen(listeners)
             self.connected, self.address = self.sock.accept()
+        except KeyboardInterrupt:
+            print "eyboard interrupt."
         except Exception as e:
             print "Error setting up server and connection."
             print e
@@ -158,4 +160,7 @@ def set_position(gpredict, az, el, cmd):
 
 ###############################################################################
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except KeyboardInterrupt:
+        print "\nExiting.\n"
