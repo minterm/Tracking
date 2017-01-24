@@ -44,17 +44,17 @@ max_el: "Maximum rotator elevation in degrees"
 	Range: -90.0..180.0, step 0.0
 
 
-$ rotctl --model=405 --serial-speed=9600 --rig-file=PORTONCOMPUTER --set-conf=min_az=-5,max_az=360,min_el=-5,max_el=180
+$ rotctl --model=405 --serial-speed=4800--rig-file=PORTONCOMPUTER --set-conf=min_az=-5,max_az=360,min_el=-5,max_el=180
 
 for TCP connection add --port=1234
 Port 4533 is the default rotctld port
 
 
-$ rotctld --model=405 --serial-speed=9600 --rig-file=SERIALPORT --set-conf=min_az=-5,max_az=360,min_el=-5,max_el=180 --port=TCPPORT
+$ rotctld --model=405 --serial-speed=4800 --rig-file=SERIALPORT --set-conf=min_az=-5,max_az=360,min_el=-5,max_el=180 --port=TCPPORT
 
 or
 
-$ rotctld -m 405 -s 9600 -r SERIALPORT -C min_az=-5,max_az=360,min_el=-5,max_el=180 -t TCPPORT
+$ rotctld -m 405 -s 4800 -r SERIALPORT -C min_az=-5,max_az=360,min_el=-5,max_el=180 -t TCPPORT
 
 From the Green Heron RT-21 Manual Appendix F - Protocol:
 'The protocol implemented in the RT-21 is a "superset" of DCU-1 and therefore the RT-21 is compatible with most 
@@ -62,5 +62,3 @@ software packages without change. If your software package does not have a Green
 DCU-1 or Rotor EZ. All communications is on the RS-232 port and 4800 8 N1, the DCU-1 standard. (9600 8N1 may be 
 selected using the Advanced tab in SETUP Utility). The USB port can also be used. When USB is plugged in, output 
 from the 232 port is suppressed except for M/S and M/C commands.'
-
-This suggests the script should use the "-s 4800" option and should work with the "-m 401" option
