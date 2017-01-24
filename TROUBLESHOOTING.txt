@@ -1,0 +1,18 @@
+ TROUBLESHOOTING:
+
+1. Run as root.
+
+2. Make sure rot_split.py and start_rotor.sh have the correct paths 
+   at the top, are in the same folder, and have execute permissions.
+
+3. Ensure you are connected to the correct devices. The device is the 
+   argument after the "-r" option in start_rotor.sh.
+
+4. If you are getting the "RPRT -6" error when sending the "p" command, try
+   using a different port. Edit the port # in both start_rotor.sh and 
+   rot_split.py
+
+5. Ensure system has Python 2 and Hamlib 3.0 installed.
+
+6. Test connections to devices with 
+    $ sudo rotctl -m 405 -r [DEVICE] -vvvvv

@@ -15,10 +15,10 @@ port on the computer to send commands to. By default this port is 4533 (the
 port that Hamlib by default listens on). This is where rot_split.py intercepts 
 the commands. rot_split.py uses 4533, but this can be edited if you want to
 use a different port. The Bash script creates two instances of rotctld on 
-ports 4535 and 4537. One for the az part of the controller and one for the el.
+ports 4539 and 4537. One for the az part of the controller and one for the el.
 
 TO RUN:
 Just run start_rotor.sh with root permissions and engage on Gpredict.
 
 TO STOP:
-CTRL-C. It's not pretty but it works.
+CTRL-C.

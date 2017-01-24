@@ -10,7 +10,7 @@ import socket
 # Constants
 HOST        = 'localhost'
 GPORT       = 4533
-azPORT      = 4535
+azPORT      = 4539
 elPORT      = 4537
 REC_SZ      = 1024
 RUN_FOREVER = True

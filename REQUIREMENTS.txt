@@ -1,0 +1,4 @@
+REQUIREMENTS:
+
+Python 2
+Hamlib
