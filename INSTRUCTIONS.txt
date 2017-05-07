@@ -1,9 +1,10 @@
 INSTRUCTIONS: 
 
 1. Change device number (number after -r argument of rotctld) to the port 
-   numbers of the connect azimuth and elevation controllers.
+   numbers of the connect azimuth and elevation controllers. The deviceFinder
+   script can help you find these numbers.
 
-2. Run start_rotor.sh as root. You do not run rotctld or rot_split.py.
+2. Run start_rotor.sh as root. You do not run manually rotctld or rot_split.py.
    Make sure both scripts have execute permissions.
     $ chmod u+x start_rotor.sh rot_split.py 
     $ sudo ./start_rotor.sh

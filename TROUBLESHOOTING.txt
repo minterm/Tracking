@@ -15,11 +15,14 @@
    using a different port. Edit the port # in both start_rotor.sh and 
    rot_split.py
 
-6. If you are getting "[Errno 98] Address already in use", a Python
-   instance is still running. Use the following command to find the PID.
+6. If you are getting "[Errno 98] Address already in use" (or other unknown
+   errors), a Python instance is still running. Use the following command to 
+   find the PID.
     $ ps aux | grep python
    Then use the following command to kill the process.
     $ sudo kill [PID]
+   Or, to kill all python processes, use the following command.
+    $ sudo pkill python
 
-6. Test connections to devices with 
-    $ sudo rotctl -m 405 -r [DEVICE] -vvvvv
+7. Test connections to devices with 
+    $ sudo rotctl -m 405 -r [DEVICE]
