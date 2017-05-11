@@ -29,7 +29,6 @@ class client_socket:
 
     def connect(self, host, port):
         for attempt in range(self.maxRetry):
-            print "Attempt: ", attempt
             try:
                 self.sock.connect((host,port))
             except EnvironmentError as e:
