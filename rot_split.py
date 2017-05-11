@@ -6,6 +6,8 @@
 # By Micah Cliffe (KK6SLK) <micah.cliffe@ucla.edu>
 
 import socket
+import errno
+import time
 
 # Constants
 HOST        = 'localhost'
@@ -18,13 +20,27 @@ RUN_FOREVER = True
 ###############################################################################
 class client_socket:
     def __init__(self, sock=None):
+        self.maxRetry  = 5
+        self.retryTime = 1
         if sock is None:
             self.sock = socket.socket()
         else:
             self.sock = sock
 
     def connect(self, host, port):
-        self.sock.connect((host,port))
+        for attempt in range(self.maxRetry):
+            print "Attempt: ", attempt
+            try:
+                self.sock.connect((host,port))
+            except EnvironmentError as e:
+                if e.errno == errno.ECONNREFUSED:
+                    time.sleep(self.retryTime)
+                else:
+                    raise
+            else:
+                break
+        else:
+            raise RuntimeError("Maximum number of unsuccessful attempts reached")
 
     def send(self, msg):
         self.sock.send(msg)

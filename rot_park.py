@@ -8,7 +8,7 @@
 import socket
 from rot_split import client_socket, HOST, azPORT, elPORT
 
-AZ_POS      = "90"
+AZ_POS      = "135"
 EL_POS      = "90"
 
 ###############################################################################
