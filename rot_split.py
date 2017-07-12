@@ -4,14 +4,17 @@
 # Do not manually run this script. Run start_rotor.sh.
 # Written for UCLA's ELFIN mission <elfin.igpp.ucla.edu>
 # By Micah Cliffe (KK6SLK) <micah.cliffe@ucla.edu>
+# Edited by Alexander Gonzalez (KM6ISP) <gonzalezalexander1997@gmail.com>
+
+# Interface with GPredict removed. Azimuth and elevation come from custom tracking script (nostradamus.py) that uses PyEphem.
 
 import socket
 import errno
 import time
+import nostradamus
 
 # Constants
 HOST        = 'localhost'
-GPORT       = 4533
 azPORT      = 4535
 elPORT      = 4537
 REC_SZ      = 1024
@@ -51,57 +54,13 @@ class client_socket:
         self.sock.close()
 
 ###############################################################################
-class server_socket:
-    def __init__(self, sock=None):
-        if sock is None:
-            self.sock = socket.socket()
-        else:
-            self.sock = sock
-        self.connected = None
-        self.address   = None
-    
-    def setup(self, host, port, listeners=1):
-        try:
-            self.sock.bind((host,port))
-            self.sock.listen(listeners)
-            self.connected, self.address = self.sock.accept()
-        except Exception as e:
-            print "Error setting up server and connection."
-            print e
-
-    def acceptNew(self):
-        if self.connected:
-            try:
-                self.connected.close()
-            except Exception as e:
-                print e
-        try:
-            self.connected, self.address = self.sock.accept()
-        except Exception as e:
-            print "Error accepting new connection."
-            print e
-    
-    def receive(self):
-        return str(self.connected.recv(REC_SZ))
-
-    def respond(self, response):
-        self.connected.send(response)
-
-    def __del__(self):
-        if self.connected:
-            try:
-                self.connected.close()
-            except Exception as e:
-                print e
-        self.sock.close()
-
-###############################################################################
 
 def main():
+
+#Creates sockets for az and el of rotor controller
     try:
         az       = client_socket()
         el       = client_socket()
-        gpredict = server_socket()
     except Exception as e:
         print "Could not make sockets. Exiting."
         print e
@@ -109,35 +68,82 @@ def main():
     az.connect(HOST, azPORT)
     el.connect(HOST, elPORT)
     print "Connected to rotctld instances."
-    print "Waiting to engage with Gpredict."
-    gpredict.setup(HOST, GPORT)
-    print "Engaged."
 
+#initialize nostradamus 
+    n = nostradamus.Predictor()
+    n.updateTLEs()
+    
     while True:
-        print "____Listen to Gpredict____"
-        heard = gpredict.receive()
-        if heard == "":
-            print "Waiting to engage with Gpredict."
-            gpredict.acceptNew()
-            print "Engaged."
-            continue
+        satellite = raw_input("Which satellite would you like to track? ")
+        valid = n.addSatellite(satellite)
+        if(valid):
+            break
         else:
-            print "Command: " + heard
-        
-        if heard[0] == 'p':
-            get_position(gpredict, az, el, heard)
-        elif heard[0] == 'P':
-            set_position(gpredict, az, el, heard)
-        elif heard[0] == 'q':
-            print "Disengaged."
-            if not RUN_FOREVER:
-                break
+            #check if spelling is correct or if satellite is in tle.txt
+            print "Please enter valid satellite." 
+    while True:
+        valid_options = ['p', 'P', 'q','Q']
+        selection = raw_input("Enter p to get current position, P to track satellite, Q to park, q to quit: ")
+        if selection not in valid_options:
+            print "Unknown command. Please enter a valid command."
         else:
-            print "Unknown command: " + str(heard)
-    print "Exiting."
+            break
+    print "\nSTATION: " + n.getStation()
+    print "SATELLITES: " + str(n.getSatellites())
 
-def get_position(gpredict, az, el, cmd):
-    print "____Get Position____"
+
+#NOTE: add frequency track.
+#NOTE: add ability to change satellites during script
+    while True:
+        print "\nListening to Nostradamus...\n"
+        
+#Begins nostradamus tracker (i.e. gets azimuth and elevation of chosen satellite. For more info see nostradamus.py)
+        pos = n.position(satellite)
+        n.loadTLE(satellite)
+#takes azimuth and elevation from nostradamus and packs it into a command
+        pos = str(pos).strip('()')
+        rotorcmd = selection + ' , ' + pos
+#Just for checking that azimuth and elevation make sense (reference gpredict). Can comment out whenever not needed.         
+        tempcmd =  rotorcmd.split(',')
+        check_az = '%.2f' % float(tempcmd[1])
+        check_el = '%.2f' % float(tempcmd[2])
+
+        
+        print "Acquiring Target: %s " % satellite
+        print "AZ: " + str(check_az)
+        print "EL: " + str(check_el)
+#different actions depending on user selection
+
+        #Entering 'q' quits the application
+        if selection == 'q':
+            print "\nSHUTTING DOWN DEATHSTAR."
+            break
+        
+        #Entering 'p' returns the current position of the array
+        elif selection == 'p':
+            get_position(az, el, rotorcmd)
+            break
+        #Entering 'P' begins tracking of the chosen satellite
+        #RPRT 0 = successful command, RPRT -1 = failed command
+        elif selection == 'P':
+            valid_set = set_position(az, el, rotorcmd)
+            if not valid_set:
+                print "%s out of range. Exiting." % satellite
+                break
+        #Entering anything else prompts user to make valid selection
+        elif selection == 'Q':
+            print "Parking the deathstar..."
+#NOTE:      ./rot_park.py
+        else:
+            print "Unknown command: " + selection
+            print "I think you broke me. Exit I guess? "
+        #~10s gives a tolerance of about 3-4 degrees
+
+        time.sleep(10)
+
+
+def get_position(az, el, cmd):
+    print "\nCurrent superlaser position...\n "
     az.send(cmd)
     az_response = az.get_response().splitlines()[0]
     el.send(cmd)
@@ -146,30 +152,28 @@ def get_position(gpredict, az, el, cmd):
     print "EL: " + el_response
     response = az_response + '\n' + el_response + '\n'
     print "response: " + response
-    gpredict.respond(response)
 
-def set_position(gpredict, az, el, cmd):
-    print "____Set Position____"
-    cmd  = cmd.split()
+def set_position(az, el, cmd):
+    print "\nAIMING SUPERLASER..."
+    cmd  = cmd.split(',')
     # cmd = [P, AZIMUTH, ELEVATION]
     azCtrl = cmd[0] + ' ' + cmd[1] + ' 0\n'
     az.send(azCtrl)
     elCtrl = cmd[0] + ' ' + cmd[2] + ' 0\n'
     el.send(elCtrl)
-    print "Commands sent:"
-    print "AZ:\n" + azCtrl
-    print "EL:\n" + elCtrl
+    print "Commands sent."
+    print "AZ: " + azCtrl
+    print "EL: " + elCtrl
     az_resp = az.get_response()
     el_resp = el.get_response()
-    print "Responses:"
+    print "CHECKING SUPERLASER..."
     print "AZ: " + az_resp
     print "EL: " + el_resp
     if az_resp == el_resp and az_resp == "RPRT 0\n":
         pass
     else:
-        print "HAMLIB ERROR.\n" + az_resp + el_resp
-    gpredict.respond(az_resp)
-
+        print "SUPERLASER MALFUNCTION."  
+        return 0
 
 ###############################################################################
 if __name__ == "__main__":
